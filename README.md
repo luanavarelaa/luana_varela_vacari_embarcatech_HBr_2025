@@ -1,3 +1,3 @@
 Luana Varela Vacari - HBr - Campinas
 
-Projetos desenvolvidos no curso EmbarcaTech 2025
+Projetos Desenvolvidos no Curso EmbarcaTech 2025
