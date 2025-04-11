@@ -115,7 +115,7 @@ int main() {
             }
 
             // Quando a contagem chegar a 0, exibe o valor do contador
-            char resultado[50];
+            char resultado[4];
             sprintf(resultado, "Valor: %d", contador_b);
             oled_display_text(resultado);
         }
