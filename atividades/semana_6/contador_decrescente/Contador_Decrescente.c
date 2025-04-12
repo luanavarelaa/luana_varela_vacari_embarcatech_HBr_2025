@@ -109,7 +109,7 @@ int main() {
 
             for (i = 9; i >= 0; i--) {  // Contagem regressiva de 9 a 0
                 char numero[4];             // Buffer para converter número em texto
-                sprintf(numero, "%d", i);   // Converte inteiro para string
+                sprintf(numero, "%d | %d", i, contador_b);   // Converte inteiro para string
                 oled_display_text(numero);  // Exibe o número no display
                 sleep_ms(1000);             // Espera 1 segundo
             }
