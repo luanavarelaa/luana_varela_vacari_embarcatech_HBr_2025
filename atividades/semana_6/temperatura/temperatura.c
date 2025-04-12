@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "inc/ssd1306.h"            // Biblioteca para o display OLED SSD1306
-#include "hardware/i2c.h"           // Biblioteca para comunicação I2C
+#include "inc/ssd1306.h"    // Biblioteca para o display OLED SSD1306
+#include "hardware/i2c.h"  // Biblioteca para comunicação I2C
 #include "hardware/adc.h" // Biblioteca para manipulação do ADC no RP2040
 
 // Inicializa o display OLED
@@ -53,8 +53,22 @@ int main()
 {
     stdio_init_all();
 
-    while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(1000);
+    oled_setup();         // Configura OLED
+    oled_clear();         // Limpa tela
+
+    adc_init();
+    adc_set_temp_sensor_enabled(true);
+    adc_select_input(4);
+
+    while(1){
+        uint16_t valor_adc = adc_read();
+        const float conversão = 3.3f / (1<<12);
+        float valor_voltagem = valor_adc * conversão;
+        float valor_temperatura = 27 - (valor_voltagem - 0.706)/0.001721;
+
+        char temperatura[16];
+        sprintf(temperatura, "%.2f C", valor_temperatura);
+        oled_display_text(temperatura);
+        sleep_ms(2000);
     }
 }
