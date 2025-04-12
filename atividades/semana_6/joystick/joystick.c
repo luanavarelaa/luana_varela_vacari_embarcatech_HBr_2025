@@ -6,10 +6,10 @@
 #include <string.h>
 
 // Definição dos pinos usados para o joystick e LEDs
-const int vRx = 26;          // Pino de leitura do eixo X do joystick (conectado ao ADC)
-const int vRy = 27;          // Pino de leitura do eixo Y do joystick (conectado ao ADC)
-const int ADC_CHANNEL_0 = 0; // Canal ADC para o eixo X do joystick
-const int ADC_CHANNEL_1 = 1; // Canal ADC para o eixo Y do joystick
+const int vRx = 27;          // Pino de leitura do eixo X do joystick (conectado ao ADC)
+const int vRy = 26;          // Pino de leitura do eixo Y do joystick (conectado ao ADC)
+const int ADC_CHANNEL_0 = 0; // Canal ADC para o eixo Y do joystick
+const int ADC_CHANNEL_1 = 1; // Canal ADC para o eixo X do joystick
 
 // Função para configurar o joystick (pinos de leitura e ADC)
 void iniciar_joystick()
@@ -71,11 +71,11 @@ void oled_display_xy(uint16_t x_val, uint16_t y_val) {
 // Função para ler os valores dos eixos do joystick (X e Y)
 void ler_eixos_joystick(uint16_t *eixo_x, uint16_t *eixo_y)
 {
-  adc_select_input(ADC_CHANNEL_0); // Seleciona o canal ADC para o eixo X
+  adc_select_input(ADC_CHANNEL_1); // Seleciona o canal ADC para o eixo X
   sleep_us(2);                     // Pequeno delay
   *eixo_x = adc_read();            // Lê valor X
 
-  adc_select_input(ADC_CHANNEL_1); // Canal ADC para Y
+  adc_select_input(ADC_CHANNEL_0); // Canal ADC para Y
   sleep_us(2);
   *eixo_y = adc_read();            // Lê valor Y
 }
