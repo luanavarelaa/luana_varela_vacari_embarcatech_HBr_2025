@@ -64,7 +64,7 @@ int main()
         uint16_t valor_adc = adc_read();
         const float conversão = 3.3f / (1<<12);
         float valor_voltagem = valor_adc * conversão;
-        float valor_temperatura = 27 - (valor_voltagem - 0.706)/0.001721;
+        float valor_temperatura = 27 - (valor_voltagem - 0.706)/0.001721; // transforma em graus celcius
 
         char temperatura[16];
         sprintf(temperatura, "%.2f C", valor_temperatura);
