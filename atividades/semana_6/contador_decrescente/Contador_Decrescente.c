@@ -1,53 +1,98 @@
-#include <stdio.h>                  // Biblioteca padrão de entrada/saída
-#include "pico/stdlib.h"            // Biblioteca padrão do Raspberry Pi Pico
-#include "inc/ssd1306.h"            // Biblioteca para o display OLED SSD1306
-#include "hardware/i2c.h"           // Biblioteca para comunicação I2C
-#include "hardware/timer.h"         // Biblioteca para temporizadores
-#include "hardware/gpio.h"          // Biblioteca para controle de GPIO
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "inc/ssd1306.h"
+#include "hardware/i2c.h"
+#include "hardware/gpio.h"
 
-#define BOTAO_A 5       
-#define BOTAO_B 6  // Incrementa contador            // Define o pino GPIO 5 como o botão A
+// Definição dos pinos dos botões
+#define BOTAO_A 5
+#define BOTAO_B 6
 
-volatile bool estado_contagem = false;  // Flag global que controla se a contagem deve iniciar
-volatile int contador_b = 0;  
-volatile int i = 0; 
+// Variáveis globais para controle da contagem e dos toques
+volatile bool contando = false;
+int contador = 9; // Inicia a contagem de 9
+int contador_b = 0; // Contador para os toques no botão B
 
-absolute_time_t ultimo_clique_A = 0;  // Último tempo de clique no botão B
-absolute_time_t ultimo_clique_B = 0;  // Último tempo de clique no botão B
+// Variáveis para controle do tempo
+absolute_time_t ultimo_tempo; 
+absolute_time_t ultimo_clique_A = 0;
+absolute_time_t ultimo_clique_B = 0;
+bool atualiza_display = true;  // Flag para indicar quando o display deve ser atualizado
 
-// Função de callback que será chamada na interrupção do botão
+// Função para tratar o botão A
+void tratar_botao_a() {
+    absolute_time_t agora = get_absolute_time(); // Obter o tempo atual
+    if (absolute_time_diff_us(ultimo_clique_A, agora) > 300000) { // Verifica se o tempo entre cliques é maior que 300ms
+        ultimo_clique_A = agora; // Atualiza o tempo do último clique
+        contando = true; // Inicia a contagem
+        contador = 9; // Reseta a contagem para 9
+        contador_b = 0; // Reseta o contador de toques no botão B
+        ultimo_tempo = get_absolute_time(); // Reseta o tempo de contagem
+        atualiza_display = true; // Indica que o display deve ser atualizado
+    }
+}
+
+// Função para tratar o botão B
+void tratar_botao_b() {
+    absolute_time_t agora = get_absolute_time(); // Obter o tempo atual
+    if (absolute_time_diff_us(ultimo_clique_B, agora) > 300000) { // Verifica se o tempo entre cliques é maior que 300ms
+        ultimo_clique_B = agora; // Atualiza o tempo do último clique
+        if (contando && contador > 0) { // Se está contando e o contador for maior que 0
+            contador_b++; // Incrementa o contador de toques no botão B
+            atualiza_display = true; // Indica que o display deve ser atualizado
+        }
+    }
+}
+
+// Função de callback para as interrupções de GPIO
 void gpio_callback(uint gpio, uint32_t events) {
-    if (gpio == BOTAO_A && (events & GPIO_IRQ_EDGE_FALL)) {
-        absolute_time_t agora_A = get_absolute_time();
-        // Calcula tempo desde o último clique
-        if (absolute_time_diff_us(ultimo_clique_A, agora_A) > 300000) { // 300ms = 300000us
-            estado_contagem = true;  // Ativa a flag para iniciar a contagem
-            ultimo_clique_A = agora_A;
-        }
-    }
-
-    if (gpio == BOTAO_B && (events & GPIO_IRQ_EDGE_FALL)) {
-
-        absolute_time_t agora_B = get_absolute_time();
-        // Calcula tempo desde o último clique
-        if (absolute_time_diff_us(ultimo_clique_B, agora_B) > 300000 && i > 0) { // 300ms = 300000us
-            contador_b++; // Incrementa contador quando botão B for pressionado
-            ultimo_clique_B = agora_B;
+    if ((events & GPIO_IRQ_EDGE_FALL)) { // Verifica se a interrupção foi devido a uma borda de queda (botão pressionado)
+        if (gpio == BOTAO_A) { // Se o botão pressionado foi o A, chama a função de tratamento do botão A
+            tratar_botao_a();
+        } else if (gpio == BOTAO_B) { // Se o botão pressionado foi o B, chama a função de tratamento do botão B
+            tratar_botao_b();
         }
     }
 }
 
-// Inicializa o display OLED
+// Função de configuração do display OLED
 void oled_setup() {
-    i2c_init(i2c1, 100000);                  // Inicializa o I2C1 com frequência de 100kHz
-    gpio_set_function(14, GPIO_FUNC_I2C);    // Define GPIO 14 como função I2C (SDA)
-    gpio_set_function(15, GPIO_FUNC_I2C);    // Define GPIO 15 como função I2C (SCL)
-    gpio_pull_up(14);                        // Habilita resistor de pull-up no SDA
-    gpio_pull_up(15);                        // Habilita resistor de pull-up no SCL
-    ssd1306_init();                          // Inicializa o display OLED SSD1306
+    i2c_init(i2c1, 100000); // Inicializa a comunicação I2C
+    gpio_set_function(14, GPIO_FUNC_I2C); // Configura os pinos 14 e 15 como I2C
+    gpio_set_function(15, GPIO_FUNC_I2C);
+    gpio_pull_up(14); // Habilita o resistor de pull-up no pino 14
+    gpio_pull_up(15); // Habilita o resistor de pull-up no pino 15
+    ssd1306_init(); // Inicializa o display OLED
 }
 
-// Limpa completamente o conteúdo do display OLED
+// Função para exibir a contagem e os toques no display OLED
+void oled_display_contagem_e_b(int valor_contagem, int valor_b) {
+    struct render_area frame_area = {
+        .start_column = 0,
+        .end_column = ssd1306_width - 1,
+        .start_page = 0,
+        .end_page = ssd1306_n_pages - 1
+    };
+    calculate_render_area_buffer_length(&frame_area); // Calcula o tamanho do buffer de renderização
+    uint8_t ssd[ssd1306_buffer_length];
+    memset(ssd, 0, ssd1306_buffer_length); // Limpa o buffer do display
+
+    char linha1[20], linha2[20];
+    sprintf(linha1, "Contagem: %d", valor_contagem); // Preenche a primeira linha com o valor da contagem
+    sprintf(linha2, "Toques: %d", valor_b); // Preenche a segunda linha com o número de toques no botão B
+
+    int x1 = 0;
+    int x2 = 0;
+    int y1 = 16; // Posição vertical para a primeira linha
+    int y2 = 32; // Posição vertical para a segunda linha
+
+    ssd1306_draw_string(ssd, x1, y1, linha1); // Desenha a primeira linha no display
+    ssd1306_draw_string(ssd, x2, y2, linha2); // Desenha a segunda linha no display
+
+    render_on_display(ssd, &frame_area); // Atualiza o display com o novo conteúdo
+}
+
+// Função para limpar o display OLED
 void oled_clear() {
     struct render_area frame_area = {
         .start_column = 0,
@@ -55,69 +100,51 @@ void oled_clear() {
         .start_page = 0,
         .end_page = ssd1306_n_pages - 1
     };
-    calculate_render_area_buffer_length(&frame_area);  // Calcula o tamanho do buffer
-    uint8_t ssd[ssd1306_buffer_length];                // Cria buffer para envio ao display
-    memset(ssd, 0, ssd1306_buffer_length);             // Preenche com zeros (limpa a tela)
-    render_on_display(ssd, &frame_area);               // Envia buffer limpo para o display
-}
-
-// Exibe um texto centralizado no display OLED
-void oled_display_text(const char *text) {
-    struct render_area frame_area = {
-        .start_column = 0,
-        .end_column = ssd1306_width - 1,
-        .start_page = 0,
-        .end_page = ssd1306_n_pages - 1
-    };
-    calculate_render_area_buffer_length(&frame_area);
+    calculate_render_area_buffer_length(&frame_area); // Calcula o tamanho do buffer de renderização
     uint8_t ssd[ssd1306_buffer_length];
-    memset(ssd, 0, ssd1306_buffer_length);             // Limpa o buffer antes de desenhar
-
-    int text_width = strlen(text) * 6;                 // 6 pixels por caractere
-    int x = (ssd1306_width - text_width) / 2;          // Centraliza horizontalmente
-    int y = (ssd1306_height - 8) / 2;                  // Centraliza verticalmente (fonte = 8px)
-
-    ssd1306_draw_string(ssd, x, y, text);              // Desenha texto no buffer
-    render_on_display(ssd, &frame_area);               // Atualiza o display com o buffer
+    memset(ssd, 0, ssd1306_buffer_length); // Limpa o buffer do display
+    render_on_display(ssd, &frame_area); // Atualiza o display com o conteúdo limpo
 }
 
-// Função principal do programa
 int main() {
-    stdio_init_all();     // Inicializa a comunicação UART (para debug, se necessário)
-    oled_setup();         // Configura o display OLED
-    oled_clear();         // Limpa o display
+    stdio_init_all(); // Inicializa a comunicação serial para depuração
+    oled_setup(); // Configura o display OLED
+    oled_clear(); // Limpa o display OLED
 
-    // Configura o botão A (GPIO 5)
-    gpio_init(BOTAO_A);                            // Inicializa o pino como GPIO
-    gpio_set_dir(BOTAO_A, GPIO_IN);                // Define como entrada
-    gpio_pull_up(BOTAO_A);                         // Habilita resistor de pull-up
+    // Configuração do pino do botão A
+    gpio_init(BOTAO_A);
+    gpio_set_dir(BOTAO_A, GPIO_IN); // Define o pino como entrada
+    gpio_pull_up(BOTAO_A); // Habilita o resistor de pull-up no pino A
 
-    // Configura botão B (incrementar contador)
+    // Configuração do pino do botão B
     gpio_init(BOTAO_B);
-    gpio_set_dir(BOTAO_B, GPIO_IN);
-    gpio_pull_up(BOTAO_B);
+    gpio_set_dir(BOTAO_B, GPIO_IN); // Define o pino como entrada
+    gpio_pull_up(BOTAO_B); // Habilita o resistor de pull-up no pino B
 
-    // Registra o callback de interrupção para ambos os botões
-    gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
-    gpio_set_irq_enabled(BOTAO_B, GPIO_IRQ_EDGE_FALL, true);  // BOTAO_B usa o mesmo callback
-
+    // Configura as interrupções para os botões
+    gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &gpio_callback); // Interrupção para o botão A
+    gpio_set_irq_enabled_with_callback(BOTAO_B, GPIO_IRQ_EDGE_FALL, true, &gpio_callback); // Interrupção para o botão B
 
     while (1) {
-        if (estado_contagem) {    // Se a flag for ativada pela interrupção...
-            estado_contagem = false; // Reseta a flag para a próxima vez
-            contador_b = 0;
+        if (contando) { // Se a contagem está ativa
+            if (absolute_time_diff_us(ultimo_tempo, get_absolute_time()) >= 1000000) { // Verifica se passou 1 segundo
+                ultimo_tempo = get_absolute_time(); // Atualiza o tempo de contagem
+                contador--; // Decrementa o contador
+                atualiza_display = true; // Indica que o display deve ser atualizado
 
-            for (i = 9; i >= 0; i--) {  // Contagem regressiva de 9 a 0
-                char numero[4];             // Buffer para converter número em texto
-                sprintf(numero, "%d", i);   // Converte inteiro para string
-                oled_display_text(numero);  // Exibe o número no display
-                sleep_ms(1000);             // Espera 1 segundo
+                if (contador < 0) { // Se o contador chegou a 0
+                    contando = false; // Para a contagem
+                    oled_display_contagem_e_b(0, contador_b); // Exibe o resultado final
+                    continue;
+                }
             }
+        }
 
-            // Quando a contagem chegar a 0, exibe o valor do contador
-            char resultado[4];
-            sprintf(resultado, "Valor: %d", contador_b);
-            oled_display_text(resultado);
+        if (atualiza_display) { // Se o display precisa ser atualizado
+            atualiza_display = false;
+            if (contador >= 0) {
+                oled_display_contagem_e_b(contador, contador_b); // Atualiza o display com a contagem e o número de toques
+            }
         }
     }
 
