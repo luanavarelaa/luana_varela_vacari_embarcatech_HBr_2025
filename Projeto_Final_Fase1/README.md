@@ -16,7 +16,7 @@ O sistema também permite o ajuste dinâmico da sensibilidade com os botões fí
 
     • Botão B: aumenta o limite de ruído em 0.1.
 
-    O valor inicial do limite é 1.0, podendo variar entre 0.2 e 1.8.
+    O valor inicial do limite é 1.0, podendo variar entre 0.2 e 1.8. 
 
 Todo o projeto foi desenvolvido utilizando apenas os recursos integrados da BitDogLab, aplicando conhecimentos aprendidos ao longo do curso, como:
 
@@ -27,6 +27,9 @@ Todo o projeto foi desenvolvido utilizando apenas os recursos integrados da BitD
     ↪ Comunicação via I2C
 
     ↪ Temporizadores
+
+**Para mais informações acesse:**
+https://github.com/luanavarelaa/luana_varela_vacari_embarcatech_HBr_2025/blob/main/Projeto_Final_Fase1/Projeto%20Final.pdf
 
 
 
