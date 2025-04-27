@@ -35,7 +35,11 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(arquitetura_modular arquitetura_modular.c )
+add_executable(arquitetura_modular 
+    app/main.c           # arquivo principal (app)
+    drivers/led_embutido.c  # driver do LED embutido
+    hal/hal_led.c        # camada HAL para controle do LED
+)
 
 pico_set_program_name(arquitetura_modular "arquitetura_modular")
 pico_set_program_version(arquitetura_modular "0.1")
@@ -46,17 +50,18 @@ pico_enable_stdio_usb(arquitetura_modular 1)
 
 # Add the standard library to the build
 target_link_libraries(arquitetura_modular
-        pico_stdlib)
+    pico_stdlib
+    pico_cyw43_arch_none   # necessário para usar cyw43_arch (LED embutido)
+)
 
 # Add the standard include files to the build
 target_include_directories(arquitetura_modular PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/include   # inclui cabeçalhos (.h)
 )
 
 # Add any user requested libraries
 target_link_libraries(arquitetura_modular 
-        
-        )
+    
+)
 
 pico_add_extra_outputs(arquitetura_modular)
-
