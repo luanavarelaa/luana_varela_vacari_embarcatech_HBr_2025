@@ -28,6 +28,7 @@ typedef struct {
 } Bola;
 
 int frequencias[NUM_CANALETAS] = {0};
+int total_bolas_caidas = 0;
 
 void oled_setup() {
     i2c_init(i2c1, 100000);
@@ -128,8 +129,13 @@ void desenha_cena(Bola bolas[MAX_BOLAS]) {
         }
     }
 
-    // Desenha o histograma no final
+    // Desenha o histograma
     desenhar_histograma(buffer);
+
+    // Mostra contador de bolas caídas
+    char texto[20];
+    snprintf(texto, sizeof(texto), "%d", total_bolas_caidas);
+    ssd1306_draw_string(buffer, 100, 0, texto); // canto superior direito
 
     render_on_display(buffer, &area);
 }
@@ -189,6 +195,7 @@ int main() {
                 if (bolas[i].y >= ALTURA - 1) {
                     int canaleta = identificar_canaleta(bolas[i].x);
                     frequencias[canaleta]++;
+                    total_bolas_caidas++; // Incrementa contador
                     imprimir_frequencias();
                     bolas[i].ativa = false;
                 }
