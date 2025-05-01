@@ -100,3 +100,7 @@ Ambos os testes reforçaram a consistência da lógica de simulação e a capaci
 ## Conclusão
 O projeto cumpriu seu objetivo de representar visualmente uma simulação estatística de forma precisa e educativa. A modularização do código facilitou a manutenção e a clareza da lógica. A representação gráfica proporcionou uma forma intuitiva de visualizar a distribuição das bolas, com potencial para uso didático em aulas de estatística ou física.
 
+## Vídeo Demonstrativo
+https://youtu.be/__VkWbK26pE?si=CsQPs99E9qBS5SVT 
+
+
