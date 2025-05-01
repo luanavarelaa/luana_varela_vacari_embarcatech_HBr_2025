@@ -1,4 +1,4 @@
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "pico/stdlib.h"
@@ -11,14 +11,19 @@
 #define ESPACO_HORIZONTAL 2
 #define ESPACO_VERTICAL 2
 #define INICIO_PINOS 16
-#define FIM_PINOS 40
-#define MARGEM_CANALETAS 4
+#define FIM_PINOS 36
+#define MARGEM_CANALETAS 8
 #define NUM_CANALETAS 32
 #define LARGURA_CANALETA (LARGURA / NUM_CANALETAS)
+
+#define MAX_BOLAS 20
+#define TICKS_NOVA_BOLA 10
+#define LARGURA_ABERTURA 10  // largura da "boca" superior
 
 typedef struct {
     int x;
     int y;
+    bool ativa;
 } Bola;
 
 int frequencias[NUM_CANALETAS] = {0};
@@ -65,7 +70,7 @@ int identificar_canaleta(int x) {
     return indice;
 }
 
-void desenha_cena(Bola *b) {
+void desenha_cena(Bola bolas[MAX_BOLAS]) {
     struct render_area area = {
         .start_column = 0,
         .end_column = ssd1306_width - 1,
@@ -86,15 +91,19 @@ void desenha_cena(Bola *b) {
         }
     }
 
-    // Desenha as divisórias das canaletas
+    // Divisórias das canaletas
     int base_y = FIM_PINOS + MARGEM_CANALETAS;
     for (int i = 1; i < NUM_CANALETAS; i++) {
         int x = i * LARGURA_CANALETA;
         ssd1306_draw_line(buffer, x, base_y, x, ALTURA - 1, true);
     }
 
-    // Desenha a bolinha
-    ssd1306_draw_line(buffer, b->x, b->y, b->x, b->y, true);
+    // Desenha bolas
+    for (int i = 0; i < MAX_BOLAS; i++) {
+        if (bolas[i].ativa) {
+            ssd1306_draw_line(buffer, bolas[i].x, bolas[i].y, bolas[i].x, bolas[i].y, true);
+        }
+    }
 
     render_on_display(buffer, &area);
 }
@@ -102,7 +111,6 @@ void desenha_cena(Bola *b) {
 void mover_horizontal_aleatorio(Bola *b) {
     int direcao = (rand() % 2 == 0) ? -1 : 1;
     b->x += direcao;
-
     if (b->x < 0) b->x = 0;
     if (b->x >= LARGURA) b->x = LARGURA - 1;
 }
@@ -116,34 +124,53 @@ void imprimir_frequencias() {
 }
 
 int main() {
-    stdio_init_all();  // Habilita a comunicação serial
+    stdio_init_all();
     oled_setup();
     oled_clear();
     srand(to_us_since_boot(get_absolute_time()));
 
-    Bola bola = { .x = LARGURA / 2, .y = 0 };
+    Bola bolas[MAX_BOLAS] = {0};
     absolute_time_t ultimo_tick = get_absolute_time();
+    int tick_count = 0;
 
     while (true) {
         if (absolute_time_diff_us(ultimo_tick, get_absolute_time()) >= INTERVALO_TICK_US) {
             ultimo_tick = get_absolute_time();
+            tick_count++;
 
-            if (esta_em_pino(bola.x, bola.y)) {
-                mover_horizontal_aleatorio(&bola);
+            // Nova bola a cada TICKS_NOVA_BOLA
+            if (tick_count % TICKS_NOVA_BOLA == 0) {
+                for (int i = 0; i < MAX_BOLAS; i++) {
+                    if (!bolas[i].ativa) {
+                        int inicio = LARGURA / 2 - LARGURA_ABERTURA / 2;
+                        int fim = LARGURA / 2 + LARGURA_ABERTURA / 2;
+                        bolas[i].x = inicio + rand() % (fim - inicio + 1);
+                        bolas[i].y = 0;
+                        bolas[i].ativa = true;
+                        break;
+                    }
+                }
             }
 
-            desenha_cena(&bola);
-            bola.y++;
+            // Atualiza bolas existentes
+            for (int i = 0; i < MAX_BOLAS; i++) {
+                if (!bolas[i].ativa) continue;
 
-            if (bola.y >= ALTURA - 1) {
-                int canaleta = identificar_canaleta(bola.x);
-                frequencias[canaleta]++;
-                imprimir_frequencias();  // Mostra no monitor serial
+                if (esta_em_pino(bolas[i].x, bolas[i].y)) {
+                    mover_horizontal_aleatorio(&bolas[i]);
+                }
 
-                // Reinicia a bola
-                bola.x = LARGURA / 2;
-                bola.y = 0;
+                bolas[i].y++;
+
+                if (bolas[i].y >= ALTURA - 1) {
+                    int canaleta = identificar_canaleta(bolas[i].x);
+                    frequencias[canaleta]++;
+                    imprimir_frequencias();
+                    bolas[i].ativa = false;
+                }
             }
+
+            desenha_cena(bolas);
         }
     }
 
