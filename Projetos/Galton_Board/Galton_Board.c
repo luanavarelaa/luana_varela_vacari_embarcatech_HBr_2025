@@ -17,7 +17,7 @@
 #define LARGURA_CANALETA (LARGURA / NUM_CANALETAS)
 
 #define MAX_BOLAS 20
-#define TICKS_NOVA_BOLA 10
+#define TICKS_NOVA_BOLA 5
 #define LARGURA_ABERTURA 10  // largura da "boca" superior
 
 typedef struct {
