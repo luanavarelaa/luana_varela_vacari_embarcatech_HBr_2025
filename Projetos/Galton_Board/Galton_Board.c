@@ -18,7 +18,8 @@
 
 #define MAX_BOLAS 20
 #define TICKS_NOVA_BOLA 5
-#define LARGURA_ABERTURA 10  // largura da "boca" superior
+#define LARGURA_ABERTURA 10
+#define ALTURA_HISTOGRAMA 20
 
 typedef struct {
     int x;
@@ -70,6 +71,28 @@ int identificar_canaleta(int x) {
     return indice;
 }
 
+void desenhar_histograma(uint8_t *buffer) {
+    int max_freq = 1;
+    for (int i = 0; i < NUM_CANALETAS; i++) {
+        if (frequencias[i] > max_freq) {
+            max_freq = frequencias[i];
+        }
+    }
+
+    int base_y = ALTURA - 1;
+    for (int i = 0; i < NUM_CANALETAS; i++) {
+        int altura_barra = (frequencias[i] * ALTURA_HISTOGRAMA) / max_freq;
+        int x_inicio = i * LARGURA_CANALETA;
+        int x_fim = x_inicio + LARGURA_CANALETA - 1;
+
+        for (int x = x_inicio; x <= x_fim && x < LARGURA; x++) {
+            for (int y = 0; y < altura_barra; y++) {
+                ssd1306_draw_line(buffer, x, base_y - y, x, base_y - y, true);
+            }
+        }
+    }
+}
+
 void desenha_cena(Bola bolas[MAX_BOLAS]) {
     struct render_area area = {
         .start_column = 0,
@@ -105,6 +128,9 @@ void desenha_cena(Bola bolas[MAX_BOLAS]) {
         }
     }
 
+    // Desenha o histograma no final
+    desenhar_histograma(buffer);
+
     render_on_display(buffer, &area);
 }
 
@@ -138,7 +164,6 @@ int main() {
             ultimo_tick = get_absolute_time();
             tick_count++;
 
-            // Nova bola a cada TICKS_NOVA_BOLA
             if (tick_count % TICKS_NOVA_BOLA == 0) {
                 for (int i = 0; i < MAX_BOLAS; i++) {
                     if (!bolas[i].ativa) {
@@ -152,7 +177,6 @@ int main() {
                 }
             }
 
-            // Atualiza bolas existentes
             for (int i = 0; i < MAX_BOLAS; i++) {
                 if (!bolas[i].ativa) continue;
 
