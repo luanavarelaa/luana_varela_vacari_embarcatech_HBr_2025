@@ -12,11 +12,16 @@
 #define ESPACO_VERTICAL 2
 #define INICIO_PINOS 16
 #define FIM_PINOS 40
+#define MARGEM_CANALETAS 4
+#define NUM_CANALETAS 32
+#define LARGURA_CANALETA (LARGURA / NUM_CANALETAS)
 
 typedef struct {
     int x;
     int y;
 } Bola;
+
+int frequencias[NUM_CANALETAS] = {0};
 
 void oled_setup() {
     i2c_init(i2c1, 100000);
@@ -54,6 +59,12 @@ bool esta_em_pino(int x, int y) {
     return false;
 }
 
+int identificar_canaleta(int x) {
+    int indice = x / LARGURA_CANALETA;
+    if (indice >= NUM_CANALETAS) indice = NUM_CANALETAS - 1;
+    return indice;
+}
+
 void desenha_cena(Bola *b) {
     struct render_area area = {
         .start_column = 0,
@@ -65,6 +76,7 @@ void desenha_cena(Bola *b) {
     uint8_t buffer[ssd1306_buffer_length];
     memset(buffer, 0, ssd1306_buffer_length);
 
+    // Desenha os pinos
     for (int linha_y = INICIO_PINOS; linha_y <= FIM_PINOS; linha_y += ESPACO_VERTICAL) {
         int linha = (linha_y - INICIO_PINOS) / ESPACO_VERTICAL;
         int deslocamento = (linha % 2 == 0) ? 0 : ESPACO_HORIZONTAL / 2;
@@ -72,6 +84,13 @@ void desenha_cena(Bola *b) {
         for (int col = deslocamento; col < LARGURA; col += ESPACO_HORIZONTAL) {
             ssd1306_draw_line(buffer, col, linha_y, col, linha_y, true);
         }
+    }
+
+    // Desenha as divisórias das canaletas
+    int base_y = FIM_PINOS + MARGEM_CANALETAS;
+    for (int i = 1; i < NUM_CANALETAS; i++) {
+        int x = i * LARGURA_CANALETA;
+        ssd1306_draw_line(buffer, x, base_y, x, ALTURA - 1, true);
     }
 
     // Desenha a bolinha
@@ -88,18 +107,24 @@ void mover_horizontal_aleatorio(Bola *b) {
     if (b->x >= LARGURA) b->x = LARGURA - 1;
 }
 
+void imprimir_frequencias() {
+    printf("Contagem por canaleta:\n");
+    for (int i = 0; i < NUM_CANALETAS; i++) {
+        printf("Canaleta %2d: %d\n", i, frequencias[i]);
+    }
+    printf("------\n");
+}
+
 int main() {
+    stdio_init_all();  // Habilita a comunicação serial
     oled_setup();
     oled_clear();
     srand(to_us_since_boot(get_absolute_time()));
 
-    Bola bola;
-    bola.x = LARGURA / 2;
-    bola.y = 0;
-
+    Bola bola = { .x = LARGURA / 2, .y = 0 };
     absolute_time_t ultimo_tick = get_absolute_time();
 
-    while (bola.y < ALTURA - 1) {
+    while (true) {
         if (absolute_time_diff_us(ultimo_tick, get_absolute_time()) >= INTERVALO_TICK_US) {
             ultimo_tick = get_absolute_time();
 
@@ -109,6 +134,16 @@ int main() {
 
             desenha_cena(&bola);
             bola.y++;
+
+            if (bola.y >= ALTURA - 1) {
+                int canaleta = identificar_canaleta(bola.x);
+                frequencias[canaleta]++;
+                imprimir_frequencias();  // Mostra no monitor serial
+
+                // Reinicia a bola
+                bola.x = LARGURA / 2;
+                bola.y = 0;
+            }
         }
     }
 
