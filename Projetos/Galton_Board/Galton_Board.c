@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
 #include "pico/stdlib.h"
@@ -8,7 +8,10 @@
 #define ALTURA 64
 #define LARGURA 128
 #define INTERVALO_TICK_US 100000
-#define OBSTACULO_Y 32  // Obstáculo fixo na linha 32
+#define ESPACO_HORIZONTAL 2
+#define ESPACO_VERTICAL 2
+#define INICIO_PINOS 16
+#define FIM_PINOS 40
 
 typedef struct {
     int x;
@@ -37,7 +40,21 @@ void oled_clear() {
     render_on_display(buffer, &frame_area);
 }
 
-void desenha_bola(int x, int y) {
+bool esta_em_pino(int x, int y) {
+    if (y < INICIO_PINOS || y > FIM_PINOS) return false;
+
+    int linha = (y - INICIO_PINOS) / ESPACO_VERTICAL;
+    int deslocamento = (linha % 2 == 0) ? 0 : ESPACO_HORIZONTAL / 2;
+
+    int esperado_x = deslocamento;
+    while (esperado_x < LARGURA) {
+        if (x == esperado_x) return true;
+        esperado_x += ESPACO_HORIZONTAL;
+    }
+    return false;
+}
+
+void desenha_cena(Bola *b) {
     struct render_area area = {
         .start_column = 0,
         .end_column = ssd1306_width - 1,
@@ -48,7 +65,18 @@ void desenha_bola(int x, int y) {
     uint8_t buffer[ssd1306_buffer_length];
     memset(buffer, 0, ssd1306_buffer_length);
 
-    ssd1306_draw_line(buffer, x, y, x, y, true);
+    for (int linha_y = INICIO_PINOS; linha_y <= FIM_PINOS; linha_y += ESPACO_VERTICAL) {
+        int linha = (linha_y - INICIO_PINOS) / ESPACO_VERTICAL;
+        int deslocamento = (linha % 2 == 0) ? 0 : ESPACO_HORIZONTAL / 2;
+
+        for (int col = deslocamento; col < LARGURA; col += ESPACO_HORIZONTAL) {
+            ssd1306_draw_line(buffer, col, linha_y, col, linha_y, true);
+        }
+    }
+
+    // Desenha a bolinha
+    ssd1306_draw_line(buffer, b->x, b->y, b->x, b->y, true);
+
     render_on_display(buffer, &area);
 }
 
@@ -61,7 +89,6 @@ void mover_horizontal_aleatorio(Bola *b) {
 }
 
 int main() {
-    stdio_init_all();
     oled_setup();
     oled_clear();
     srand(to_us_since_boot(get_absolute_time()));
@@ -72,28 +99,18 @@ int main() {
 
     absolute_time_t ultimo_tick = get_absolute_time();
 
-    printf("Iniciando simulação da Galton Board Digital...\n");
-    printf("Obstáculo virtual está na linha Y = %d\n", OBSTACULO_Y);
-
-    while (bola.y < ALTURA) {
+    while (bola.y < ALTURA - 1) {
         if (absolute_time_diff_us(ultimo_tick, get_absolute_time()) >= INTERVALO_TICK_US) {
             ultimo_tick = get_absolute_time();
 
-            printf("Bola em (x=%d, y=%d)", bola.x, bola.y);
-
-            if (bola.y == OBSTACULO_Y) {
+            if (esta_em_pino(bola.x, bola.y)) {
                 mover_horizontal_aleatorio(&bola);
-                printf(" --> Obstáculo atingido! Novo X: %d", bola.x);
             }
 
-            printf("\n");
-
-            desenha_bola(bola.x, bola.y);
+            desenha_cena(&bola);
             bola.y++;
         }
     }
-
-    printf("Bola chegou ao fundo! Posição final X: %d\n", bola.x);
 
     return 0;
 }
