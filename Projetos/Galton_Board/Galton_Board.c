@@ -18,7 +18,7 @@
 
 #define MAX_BOLAS 20
 #define TICKS_NOVA_BOLA 5
-#define LARGURA_ABERTURA 10
+#define LARGURA_ABERTURA 20
 #define ALTURA_HISTOGRAMA 20
 
 typedef struct {
@@ -135,7 +135,7 @@ void desenha_cena(Bola bolas[MAX_BOLAS]) {
     // Mostra contador de bolas caídas
     char texto[20];
     snprintf(texto, sizeof(texto), "%d", total_bolas_caidas);
-    ssd1306_draw_string(buffer, 100, 0, texto); // canto superior direito
+    ssd1306_draw_string(buffer, 90, 0, texto); // canto superior direito
 
     render_on_display(buffer, &area);
 }
