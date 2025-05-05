@@ -1,6 +1,17 @@
-# Simulação de Galton Board com SSD1306 no RP2040 (BitDogLab)
+# Projeto de Sistemas Embarcados - EmbarcaTech 2025
+### Simulação de Galton Board com SSD1306 no RP2040 (BitDogLab)
+
+Autor: Luana Varela Vacari
+
+Curso: Residência Tecnológica em Sistemas Embarcados
+
+Instituição: EmbarcaTech - HBr
+
+Campinas, ___ de 2025
 ## Introdução
 Este documento apresenta a implementação de uma simulação digital do experimento conhecido como Galton Board, utilizando a BitDogLab com o microcontrolador RP2040 e uma tela OLED SSD1306 via comunicação I2C. O objetivo do projeto é representar o comportamento estatístico de distribuição binomial de forma visual e interativa.
+![Galton_labeled](https://github.com/user-attachments/assets/f0f5cf0e-4a76-410f-864d-cbcfae937dc5)
+*https://vanhunteradams.com/Pico/Galton/Galton_Stats.html*
 
 ## Visão Geral do Funcionamento
 O sistema consiste em:
@@ -29,6 +40,8 @@ As bolas são estruturadas com:
         bool ativa;
     } Bola;
 Um vetor *Bola bolas[MAX_BOLAS]* armazena as bolas em uso, controlando posição e estado de atividade.
+####  Considerações sobre a Entrada das Bolas
+Importante destacar que as bolas não foram inseridas sempre na mesma linha vertical, mas sim dentro de uma faixa horizontal central do topo da tela. Essa abordagem simula melhor o funcionamento de Galton Boards físicos, nos quais a “boca” de entrada permite certa variação na posição inicial, refletindo condições mais realistas e contribuindo para a dispersão natural da distribuição.
 
 ### Pinos e Obstáculos
 A função *esta_em_pino()* verifica se a posição atual de uma bola coincide com a localização de um pino na matriz. A lógica simula o efeito dos obstáculos ao fazer a bola se mover horizontalmente para esquerda ou direita de forma aleatória.
@@ -100,7 +113,7 @@ Ambos os testes reforçaram a consistência da lógica de simulação e a capaci
 ## Conclusão
 O projeto cumpriu seu objetivo de representar visualmente uma simulação estatística de forma precisa e educativa. A modularização do código facilitou a manutenção e a clareza da lógica. A representação gráfica proporcionou uma forma intuitiva de visualizar a distribuição das bolas, com potencial para uso didático em aulas de estatística ou física.
 
-## Vídeo Demonstrativo
-https://youtu.be/__VkWbK26pE?si=CsQPs99E9qBS5SVT 
+## Vídeo de Demonstração
+https://youtu.be/__VkWbK26pE?si=CsQPs99E9qBS5SVT
 
 
