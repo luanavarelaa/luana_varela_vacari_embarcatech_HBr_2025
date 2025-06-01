@@ -40,6 +40,8 @@ add_executable(Sintetizador_de_Audio
             src/audio.c
             src/botoes.c
             src/leds.c
+            src/oled.c
+            src/ssd1306_i2c.c
 )
 
 pico_set_program_name(Sintetizador_de_Audio "Sintetizador_de_Audio")
@@ -66,6 +68,7 @@ target_link_libraries(Sintetizador_de_Audio
         hardware_adc
         hardware_dma
         hardware_gpio
+        hardware_i2c
         )
 
 pico_add_extra_outputs(Sintetizador_de_Audio)
