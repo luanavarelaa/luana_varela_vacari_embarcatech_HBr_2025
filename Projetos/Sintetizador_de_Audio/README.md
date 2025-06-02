@@ -164,6 +164,7 @@ A frequência da portadora PWM é a frequência do sinal digital pulsante usado 
 
 ## Demonstrações
 **Imagens:**
+
 ![alt text](Imagens/20250602_133752.jpg)
 
 ![alt text](Imagens/20250602_133911.jpg)
@@ -171,6 +172,8 @@ A frequência da portadora PWM é a frequência do sinal digital pulsante usado 
 ![alt text](Imagens/20250602_134054.jpg)
 
 ![alt text](Imagens/20250602_134217.jpg)
+
+
 
 
 
