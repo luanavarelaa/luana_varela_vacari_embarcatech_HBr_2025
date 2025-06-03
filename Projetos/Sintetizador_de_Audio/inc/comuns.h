@@ -6,7 +6,7 @@
 #define MIC_CHANNEL 2 // GPIO 28 para o microfone
 #define MIC_PIN (26 + MIC_CHANNEL)
 
-#define BUZZER_PIN 21 // buzzer A
+#define BUZZER_PIN 10 // buzzer B
 #define PWM_WRAP_VALUE 2047 // Para mapear amostras ADC de 12 bits (0-4095) dividindo por 2
 
 #define BUTTON_A_PIN 5 // Botão A
