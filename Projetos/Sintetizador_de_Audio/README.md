@@ -144,23 +144,17 @@ A taxa de amostragem determina quantas vezes por segundo o sinal analógico do m
 * **Uso de Memória:** Verifique o impacto no tamanho do `AUDIO_BUFFER_SIZE`.
 * **Visualização da Forma de Onda:** Como a forma de onda é exibida com diferentes densidades de amostragem.
 
-### 2. Testando Diferentes Frequências da Portadora PWM
+### 2. PWM
+A frequência do sinal PWM em si (a portadora que está sendo modulada em largura) idealmente não precisa ser alterada, desde que já seja significativamente mais alta que a maior frequência de áudio que você está tentando reproduzir.
 
-A frequência da portadora PWM é a frequência do sinal digital pulsante usado para reproduzir o áudio. Esta frequência deve ser significativamente mais alta que as frequências de áudio para evitar ruído audível da própria PWM.
+Com uma taxa de amostragem de 22 kHz, você pode capturar e reproduzir frequências de áudio de até aproximadamente 11 kHz (pelo Teorema de Nyquist).
+No src/oled.c, a frequência da portadora PWM foi configurada para aproximadamente 61 kHz (usando `pwm_config_set_clkdiv(&config, 1.0f);` e `PWM_WRAP_VALUE = 2047`;).
 
-**Como Alterar:**
-* Configurada em `audio_init_pwm` no arquivo `src/audio.c`, através de `pwm_config_set_clkdiv()` e `PWM_WRAP_VALUE` (de `comuns.h`).
+Uma portadora de 61 kHz é mais do que 5 vezes maior que 11 kHz, o que é excelente. Isso ajuda a garantir que a própria frequência da PWM não seja audível e permite uma boa reconstrução do sinal de áudio.
 
-    ```c
-    // Em src/audio.c, dentro de audio_init_pwm:
-    // pwm_config_set_clkdiv(&config, 1.0f); // Altere este valor (ex: 1.0f, 2.0f)
-    // pwm_config_set_wrap(&config, wrap_value); 
-    ```
-    Com `clkdiv = 1.0f` e `PWM_WRAP_VALUE = 2047`, a frequência PWM é aproximadamente 61 kHz.
+Portanto, você não precisaria alterar a configuração da frequência da portadora PWM (em `audio_init_pwm`) apenas por mudar a taxa de amostragem do áudio de, por exemplo, 8kHz para 22kHz, assumindo que ela já era alta o suficiente (como é o caso com ~61kHz).
 
-**O que Observar:**
-* **Ruído da PWM:** Se a frequência da portadora for muito baixa (ex: < 20-25 kHz), um tom agudo pode ser audível.
-* **Qualidade da Reprodução:** O impacto no buzzer pode ser sutil, mas frequências PWM mais altas geralmente são melhores para a reconstrução do sinal.
+A principal "alteração" relacionada ao PWM é que a taxa na qual o duty cycle do PWM é atualizado (chamando `audio_pwm_set_sample e depois sleep_us`) será mais rápida, o que já é tratado se `TARGET_SAMPLE_RATE_HZ` for atualizado.
 
 ## Demonstrações
 **Imagens:**

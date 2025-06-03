@@ -16,10 +16,9 @@
 #define LED_G_PIN 11 // LED Verde para indicar reprodução
 #define LED_B_PIN 12 // LED Azul para indicar estado ocioso/pronto
 
-#define RECORDING_DURATION_S 2
+#define RECORDING_DURATION_S 5
 
-#define TARGET_SAMPLE_RATE_HZ 8000
-#define AUDIO_BUFFER_SIZE 256
+#define TARGET_SAMPLE_RATE_HZ 22050
 
 #define AUDIO_BUFFER_SIZE (TARGET_SAMPLE_RATE_HZ * RECORDING_DURATION_S)
 
