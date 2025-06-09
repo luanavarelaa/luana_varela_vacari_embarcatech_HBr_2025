@@ -20,7 +20,7 @@ Este projeto foi desenvolvido como parte das atividades de aprendizado, com foco
     * Exibição de mensagens de status (Pronto, Gravando, Gravado, Tocando).
     * Visualização da forma de onda do áudio gravado. 
 * **Taxa de Amostragem Configurável:** O sistema opera com uma taxa de amostragem definida (ex: 8kHz) para a captura de áudio. 
-* **Duração de Gravação Definida:** O período de gravação é pré-configurado (ex: 2 segundos), determinando o tamanho do buffer de áudio. 
+* **Duração de Gravação Definida:** O período de gravação é pré-configurado (ex: 5 segundos), determinando o tamanho do buffer de áudio. 
 
 ## Hardware Utilizado
 
