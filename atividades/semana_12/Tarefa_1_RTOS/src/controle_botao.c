@@ -6,8 +6,8 @@
 #include "tarefas.h"
 
 /**
- * @brief Tarefa para monitorar os botões A e B.
- * Suspende uma tarefa enquanto o botão está pressionado e a retoma ao soltar.
+ Tarefa para monitorar os botões A e B.
+ Suspende uma tarefa enquanto o botão está pressionado e a retoma ao soltar.
  */
 void button_task(void *params) {
     gpio_init(BUTTON_A_PIN);

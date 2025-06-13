@@ -9,7 +9,7 @@
 #define LED_B_PIN 12
 
 // Pino do Buzzer (usará PWM)
-#define BUZZER_PIN 10
+#define BUZZER_PIN 10 // Buzzer B
 
 // Pinos dos Botões
 #define BUTTON_A_PIN 5
