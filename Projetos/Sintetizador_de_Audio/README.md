@@ -1,4 +1,12 @@
-# Sintetizador de Áudio com BitDogLab
+# Projetos de Sistemas Embarcados - EmbarcaTech 2025
+
+Autor: **Luana Varela Vacari**
+
+Curso: Residência Tecnológica em Sistemas Embarcados
+
+Instituição: EmbarcaTech - HBr
+
+Campinas, 09 de junho de 2025
 
 ## Visão Geral do Projeto
 
@@ -167,12 +175,10 @@ A principal "alteração" relacionada ao PWM é que a taxa na qual o duty cycle 
 
 ![alt text](Imagens/20250602_134217.jpg)
 
+# Vídeo de Demonstração 
+https://youtu.be/SStnGR0DXUc
 
 
+## 📜 Licença
 
-
-**Vídeo de Demonstração 8Hz :**
-* [Link para o  vídeo aqui]
-
-**Vídeo de Demonstração 22Hz :**
-* [Link para o  vídeo aqui]
+GNU GPL-3.0.
