@@ -46,7 +46,7 @@ O projeto foi desenvolvido de forma modular para promover a organização e a ma
 
 * `src/controle_buzzer.c`: Contém a lógica da `buzzer_task`. Utiliza o hardware PWM do Pico para gerar um tom. A função `beep` controla a duração do som, e a tarefa utiliza `vTaskDelay()` para criar a pausa entre os bipes, cedendo o controle da CPU.
 
-* `src/botao_buzzer.c`: Contém a lógica da `button_task`. Esta tarefa verifica continuamente o estado dos botões. Ao detectar um botão pressionado ou solto, ela utiliza `vTaskSuspend()` para pausar a tarefa alvo (LED ou buzzer) e `vTaskResume()` para retomá-la. É a peça central da interatividade do sistema.
+* `src/controle_botao.c`: Contém a lógica da `button_task`. Esta tarefa verifica continuamente o estado dos botões. Ao detectar um botão pressionado ou solto, ela utiliza `vTaskSuspend()` para pausar a tarefa alvo (LED ou buzzer) e `vTaskResume()` para retomá-la. É a peça central da interatividade do sistema.
 
 ### O Papel do FreeRTOS
 
