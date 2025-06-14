@@ -42,7 +42,7 @@ O projeto foi desenvolvido de forma modular para promover a organização e a ma
 
 * `src/main.c`: É o ponto de entrada. Sua única responsabilidade é criar as três tarefas (`xTaskCreate`) e entregar o controle do processador ao escalonador do FreeRTOS (`vTaskStartScheduler`).
 
-* `src/controcontrole_led.c`: Contém a lógica da `led_task`. Em um loop infinito, ela acende uma cor do LED e chama `vTaskDelay()`, uma função do RTOS que pausa a tarefa e libera a CPU para outras tarefas.
+* `src/controle_led.c`: Contém a lógica da `led_task`. Em um loop infinito, ela acende uma cor do LED e chama `vTaskDelay()`, uma função do RTOS que pausa a tarefa e libera a CPU para outras tarefas.
 
 * `src/controle_buzzer.c`: Contém a lógica da `buzzer_task`. Utiliza o hardware PWM do Pico para gerar um tom. A função `beep` controla a duração do som, e a tarefa utiliza `vTaskDelay()` para criar a pausa entre os bipes, cedendo o controle da CPU.
 
