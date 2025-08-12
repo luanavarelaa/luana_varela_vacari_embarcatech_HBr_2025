@@ -52,7 +52,6 @@ target_link_libraries(sd_card_simples
     pico_stdlib
     hardware_spi
     hardware_dma
-    sd_driver
 )
 
 pico_add_extra_outputs(sd_card_simples)
