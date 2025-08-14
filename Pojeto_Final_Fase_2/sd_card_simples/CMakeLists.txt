@@ -33,9 +33,15 @@ project(sd_card_simples C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Add executable. Default name is the project name, version 0.1
+# Adicionando o subdiretório da biblioteca do cartão SD
+add_subdirectory(no-OS-FatFs-SD-SPI-RPi-Pico/FatFs_SPI)
 
-add_executable(sd_card_simples sd_card_simples.c )
+# Adicionando os arquivos de código-fonte necessários para a compilação.
+# Inclua seu arquivo 'sd_card_simples.c' e o 'hw_config.c'.
+add_executable(sd_card_simples
+    sd_card_simples.c
+    hw_config.c
+)
 
 pico_set_program_name(sd_card_simples "sd_card_simples")
 pico_set_program_version(sd_card_simples "0.1")
@@ -44,19 +50,20 @@ pico_set_program_version(sd_card_simples "0.1")
 pico_enable_stdio_uart(sd_card_simples 0)
 pico_enable_stdio_usb(sd_card_simples 1)
 
-# Add the standard library to the build
+# Vinculando a biblioteca padrão e a do cartão SD
 target_link_libraries(sd_card_simples
-        pico_stdlib)
+        pico_stdlib
+        FatFs_SPI)
 
 # Add the standard include files to the build
 target_include_directories(sd_card_simples PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        no-OS-FatFs-SD-SPI-RPi-Pico/FatFs_SPI
 )
 
-# Add any user requested libraries
-target_link_libraries(sd_card_simples 
-        
-        )
+# A linha vazia 'target_link_libraries' pode ser removida ou comentada.
+# target_link_libraries(sd_card_simples 
+# 
+# )
 
 pico_add_extra_outputs(sd_card_simples)
-
