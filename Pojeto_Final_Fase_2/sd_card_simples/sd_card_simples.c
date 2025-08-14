@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/gpio.h"
+#include "sd_card.h"
 #include "sd_card.h"
 #include "ff.h"
-#include "hardware/gpio.h"
 #include "string.h"
-
-// Definição dos pinos SPI conforme sua solicitação
-#define SPI_PORT spi0
-#define PIN_MISO 16
-#define PIN_CS   17
-#define PIN_SCK  18
-#define PIN_MOSI 19
+#include "hardware/rtc.h"
+#include "pico/util/datetime.h"
 
 // Definição dos pinos dos LEDs
 #define LED_BLUE_PIN   12
@@ -21,7 +17,6 @@ int main() {
     stdio_init_all();
     sleep_ms(2000);
 
-    // Inicializa os pinos dos LEDs
     gpio_init(LED_BLUE_PIN);
     gpio_set_dir(LED_BLUE_PIN, GPIO_OUT);
     gpio_init(LED_GREEN_PIN);
@@ -29,72 +24,78 @@ int main() {
     gpio_init(LED_RED_PIN);
     gpio_set_dir(LED_RED_PIN, GPIO_OUT);
 
-    // Garante que todos os LEDs estão apagados no início
     gpio_put(LED_BLUE_PIN, 0);
     gpio_put(LED_GREEN_PIN, 0);
     gpio_put(LED_RED_PIN, 0);
 
-    spi_init(SPI_PORT, 1000 * 1000);
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
-
-    gpio_init(PIN_CS);
-    gpio_set_dir(PIN_CS, GPIO_OUT);
-    gpio_put(PIN_CS, 1);
-
-    sd_card_t *sd_card = sd_get_by_num(0);
-    FRESULT fr = f_mount(&sd_card->fatfs, sd_card->pcName, 1);
+    // Inicializa o RTC da Pico
+    rtc_init();
+    
+    // Simula a sincronização do RTC com um horário real
+    datetime_t t = {
+        .year  = 2025,
+        .month = 8,
+        .day   = 14,
+        .dotw  = 4,
+        .hour  = 14,
+        .min   = 06,
+        .sec   = 00
+    };
+    rtc_set_datetime(&t);
+    
+    printf("Inicializando cartao SD...\n");
+    FRESULT fr = sd_card_init();
     
     if (fr != FR_OK) {
-        // Erro: acende o LED vermelho
         gpio_put(LED_RED_PIN, 1);
-        printf("Erro ao montar o sistema de arquivos: %s\n", FRESULT_str(fr));
+        printf("Erro ao inicializar: %s\n", FRESULT_str(fr));
+        while(true);
     } else {
-        // Sucesso na inicialização: acende o LED azul
         gpio_put(LED_BLUE_PIN, 1);
         printf("Cartao SD inicializado e montado com sucesso!\n");
-
-        FIL file;
-        const char* filename = "dados.csv";
-        
-        fr = f_open(&file, filename, FA_WRITE | FA_OPEN_APPEND);
-
-        if (fr == FR_OK) {
-            // Escreve os cabeçalhos e alguns dados no formato CSV
-            const char* header = "nome,idade,cidade\n";
-            const char* data = "Luana,20,Campinas\n";
-            
-            UINT bytes_written;
-            fr = f_write(&file, header, strlen(header), &bytes_written);
-            
-            if (fr == FR_OK) {
-                fr = f_write(&file, data, strlen(data), &bytes_written);
-            }
-
-            if (fr == FR_OK) {
-                // Sucesso na escrita: apaga o azul, acende o verde
-                gpio_put(LED_BLUE_PIN, 0);
-                gpio_put(LED_GREEN_PIN, 1);
-                printf("Dados gravados em CSV com sucesso!\n");
-            } else {
-                // Erro na escrita: apaga o azul, acende o vermelho
-                gpio_put(LED_BLUE_PIN, 0);
-                gpio_put(LED_RED_PIN, 1);
-                printf("Erro ao escrever no arquivo: %s\n", FRESULT_str(fr));
-            }
-
-            f_close(&file);
-            f_unmount(sd_card->pcName);
-        } else {
-            // Erro ao abrir arquivo: apaga o azul, acende o vermelho
-            gpio_put(LED_BLUE_PIN, 0);
-            gpio_put(LED_RED_PIN, 1);
-            printf("Erro ao abrir o arquivo: %s\n", FRESULT_str(fr));
-        }
     }
+
+    float tensao = 127.0;
+    float corrente = 2.5;
+    float energia = 0.0;
+    const char* status = "OK";
+    char csv_data[256];
+    const char* filename = "dados.csv";
 
     while (true) {
-        tight_loop_contents();
+        tensao += 0.1;
+        corrente += 0.05;
+        energia = tensao * corrente;
+
+        char timestamp_buffer[32];
+        sd_card_get_formatted_timestamp(timestamp_buffer, sizeof(timestamp_buffer));
+
+        sprintf(csv_data, "%s,%.2f,%.2f,%.2f,%s\n", timestamp_buffer, tensao, corrente, energia, status);
+        
+        fr = sd_card_append_to_csv(filename, csv_data);
+
+        if (fr == FR_OK) {
+            gpio_put(LED_BLUE_PIN, 0);
+            gpio_put(LED_GREEN_PIN, 1);
+            printf("Dados gravados com sucesso!\n");
+        } else {
+            gpio_put(LED_BLUE_PIN, 0);
+            gpio_put(LED_RED_PIN, 1);
+            printf("Erro ao gravar dados: %s\n", FRESULT_str(fr));
+        }
+        
+        sleep_ms(1000);
+        gpio_put(LED_GREEN_PIN, 0);
+        gpio_put(LED_RED_PIN, 0);
+        
+        sleep_ms(4000);
     }
+
+    sd_card_unmount();
+    gpio_put(LED_BLUE_PIN, 0);
+    gpio_put(LED_GREEN_PIN, 0);
+    gpio_put(LED_RED_PIN, 0);
+    printf("\nPrograma encerrado e cartao SD desmontado.\n");
+    
+    while(true);
 }

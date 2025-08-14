@@ -41,6 +41,7 @@ add_subdirectory(no-OS-FatFs-SD-SPI-RPi-Pico/FatFs_SPI)
 add_executable(sd_card_simples
     sd_card_simples.c
     hw_config.c
+    sd_card.c
 )
 
 pico_set_program_name(sd_card_simples "sd_card_simples")
