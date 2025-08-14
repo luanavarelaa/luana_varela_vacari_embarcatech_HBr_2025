@@ -8,6 +8,7 @@
 FRESULT sd_card_init();
 
 // Grava uma string em um arquivo CSV, adicionando uma nova linha.
+// A função verifica se o arquivo existe e cria o cabeçalho se necessário.
 FRESULT sd_card_append_to_csv(const char* filename, const char* data);
 
 // Desmonta o cartão SD com segurança.

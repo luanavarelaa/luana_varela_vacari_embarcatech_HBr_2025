@@ -7,14 +7,18 @@
 #include "hardware/rtc.h"
 #include "pico/util/datetime.h"
 
-// Variável estática para manter o estado do cartão SD
+// Variável estática para manter o estado do cartão SD.
+// O "static" a torna visível apenas neste arquivo.
 static sd_card_t *sd_card_instance;
 
+// Inicializa o cartão SD.
 FRESULT sd_card_init() {
     sd_card_instance = sd_get_by_num(0);
     return f_mount(&sd_card_instance->fatfs, sd_card_instance->pcName, 1);
 }
 
+// Função para escrever em um arquivo, substituindo o conteúdo.
+// Não é usada na versão atual, mas pode ser útil para outros testes.
 FRESULT sd_card_write_to_file(const char* filename, const char* data) {
     FIL file;
     FRESULT fr = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
@@ -27,13 +31,16 @@ FRESULT sd_card_write_to_file(const char* filename, const char* data) {
     return fr;
 }
 
+// Adiciona uma linha de dados a um arquivo CSV.
 FRESULT sd_card_append_to_csv(const char* filename, const char* data) {
     FIL file;
     FRESULT fr;
     FILINFO fno;
     
+    // Verifica se o arquivo existe.
     fr = f_stat(filename, &fno);
     
+    // Se o arquivo não existir, cria-o e escreve o cabeçalho.
     if (fr == FR_NO_FILE) {
         fr = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
         if (fr == FR_OK) {
@@ -44,21 +51,25 @@ FRESULT sd_card_append_to_csv(const char* filename, const char* data) {
         }
     }
 
+    // Abre o arquivo em modo de anexação (append) para adicionar os dados.
     fr = f_open(&file, filename, FA_WRITE | FA_OPEN_APPEND);
     if (fr != FR_OK) {
         return fr;
     }
     
+    // Escreve os dados no arquivo.
     UINT bytes_written;
     fr = f_write(&file, data, strlen(data), &bytes_written);
     f_close(&file);
     return fr;
 }
 
+// Desmonta o cartão SD.
 FRESULT sd_card_unmount() {
     return f_unmount(sd_card_instance->pcName);
 }
 
+// Obtém e formata a data e hora do RTC.
 void sd_card_get_formatted_timestamp(char* buffer, size_t size) {
     datetime_t now;
     rtc_get_datetime(&now);
