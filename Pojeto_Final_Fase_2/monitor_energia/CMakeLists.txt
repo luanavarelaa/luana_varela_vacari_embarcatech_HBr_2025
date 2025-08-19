@@ -1,0 +1,80 @@
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 1.5.1)
+set(toolchainVersion 13_3_Rel1)
+set(picotoolVersion 2.0.0)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
+set(PICO_BOARD pico_w CACHE STRING "Board type")
+
+cmake_minimum_required(VERSION 3.12)
+
+# Name project
+SET(ProjectName monitor_energia)
+
+# Set any variables required for importing libraries
+if (DEFINED ENV{FREERTOS_PATH})
+  SET(FREERTOS_PATH $ENV{FREERTOS_PATH})
+else()
+  SET(FREERTOS_PATH ${CMAKE_CURRENT_LIST_DIR}/FreeRTOS)
+endif()
+
+message("FreeRTOS Kernel located in ${FREERTOS_PATH}")
+
+# Import those libraries
+include(pico_sdk_import.cmake)
+include(${FREERTOS_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
+
+# Define project
+project(${ProjectName} C CXX ASM)
+
+# Initialize the Raspberry Pi Pico SDK
+pico_sdk_init()
+
+add_subdirectory(no-OS-FatFs-SD-SPI-RPi-Pico/FatFs_SPI)
+
+add_executable(${ProjectName}
+    ./src/main.c
+    ./lib/ads1115_adc_wrapper.c
+    ./lib/energy_monitor.c
+    ./lib/wifi_manager.c
+    ./lib/rtc_ntp.c
+    ./lib/thingspeak.c
+    ./lib/logger.c
+    ./lib/utils.c
+    ./lib/sd_card.c  
+    ./lib/hw_config.c
+    ./lib/sd_card_log_task.c
+)
+
+target_include_directories(${ProjectName} PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/lib  
+)
+
+target_link_libraries(${ProjectName}
+    pico_stdlib
+    pico_stdio_usb
+    pico_cyw43_arch_lwip_threadsafe_background
+    FreeRTOS-Kernel-Heap4
+    hardware_adc
+    hardware_dma
+    hardware_irq
+    hardware_i2c
+    hardware_rtc
+    FatFs_SPI
+    )
+
+pico_add_extra_outputs(${ProjectName})
+
+# if you have anything in "lib" folder then uncomment below - remember to add a CMakeLists.txt
+# file to the "lib" directory
+#add_subdirectory(lib)
