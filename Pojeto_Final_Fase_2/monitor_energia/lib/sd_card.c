@@ -17,19 +17,6 @@ FRESULT sd_card_init() {
     return f_mount(&sd_card_instance->fatfs, sd_card_instance->pcName, 1);
 }
 
-// Função para escrever em um arquivo, substituindo o conteúdo.
-// Não é usada na versão atual, mas pode ser útil para outros testes.
-FRESULT sd_card_write_to_file(const char* filename, const char* data) {
-    FIL file;
-    FRESULT fr = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
-    if (fr != FR_OK) {
-        return fr;
-    }
-    UINT bytes_written;
-    fr = f_write(&file, data, strlen(data), &bytes_written);
-    f_close(&file);
-    return fr;
-}
 
 // Adiciona uma linha de dados a um arquivo CSV.
 FRESULT sd_card_append_to_csv(const char* filename, const char* data) {
@@ -44,7 +31,7 @@ FRESULT sd_card_append_to_csv(const char* filename, const char* data) {
     if (fr == FR_NO_FILE) {
         fr = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
         if (fr == FR_OK) {
-            const char* header = "timestamp,tensão_rms,corrente_rms,energia_consumida,status_tensao\n";
+            const char* header = "timestamp,vrms,irms,v_pu,p_instant\n";
             UINT bytes_written;
             f_write(&file, header, strlen(header), &bytes_written);
             f_close(&file);
@@ -62,11 +49,6 @@ FRESULT sd_card_append_to_csv(const char* filename, const char* data) {
     fr = f_write(&file, data, strlen(data), &bytes_written);
     f_close(&file);
     return fr;
-}
-
-// Desmonta o cartão SD.
-FRESULT sd_card_unmount() {
-    return f_unmount(sd_card_instance->pcName);
 }
 
 // Obtém e formata a data e hora do RTC.

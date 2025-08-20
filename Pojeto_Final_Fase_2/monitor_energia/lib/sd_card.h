@@ -11,9 +11,6 @@ FRESULT sd_card_init();
 // A função verifica se o arquivo existe e cria o cabeçalho se necessário.
 FRESULT sd_card_append_to_csv(const char* filename, const char* data);
 
-// Desmonta o cartão SD com segurança.
-FRESULT sd_card_unmount();
-
 // Obtém e formata a hora atual do RTC em uma string.
 void sd_card_get_formatted_timestamp(char* buffer, size_t size);
 
